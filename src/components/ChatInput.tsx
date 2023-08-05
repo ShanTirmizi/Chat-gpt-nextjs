@@ -1,14 +1,22 @@
 'use client'
 
+import { ChatsContext } from '@/context/chats'
 import { Chat } from '@/lib/validators/chat'
 import { useMutation } from '@tanstack/react-query'
 import { nanoid } from 'nanoid'
-import { FC, useState } from 'react'
+import { FC, useContext, useState } from 'react'
 
 interface ChatInputProps {}
 
 const ChatInput: FC<ChatInputProps>= () => {
   const [input, setInput] = useState('')
+  const {
+    addChat,
+    setIsChatUpdating,
+    chats,
+    updateChat,
+    removeChat,
+  } = useContext(ChatsContext)
 
   const {mutate: sendChat, isLoading} = useMutation({
     mutationFn: async (chat: Chat) => {
@@ -21,8 +29,34 @@ const ChatInput: FC<ChatInputProps>= () => {
       })
       return response.body
     },
-    onSuccess: () => {
-      console.log('success')
+    onMutate: (chat: Chat) => {
+      addChat(chat)
+    },
+    onSuccess: async (stream) => {
+      if(!stream) throw new Error('No stream')
+
+      const id = nanoid()
+      const responseChat: Chat = {
+        id,
+        isUserInput: false,
+        text: '',
+      }
+
+      addChat(responseChat)
+      setIsChatUpdating(true)
+
+      const reader = stream.getReader()
+      const decoder = new TextDecoder()
+      let finished = false
+
+      while(!finished) {
+        const { value, done } = await reader.read()
+        finished = done
+        const chunckValue = decoder.decode(value)
+        updateChat(id, (prevText) => prevText + chunckValue)
+      }
+
+      setIsChatUpdating(false)
     },
   })
   return (
@@ -41,6 +75,7 @@ const ChatInput: FC<ChatInputProps>= () => {
               text: input,
             }
             sendChat(chat)
+            setInput('')
           }
         }}
 

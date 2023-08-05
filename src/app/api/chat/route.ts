@@ -1,4 +1,4 @@
-import { ChatGPTChats, OpenAiStream } from "@/lib/openAiStream"
+import { ChatGPTChats, OpenAiStream } from "../../../lib/openAiStream"
 import { chatListSchema } from "@/lib/validators/chat"
 
 export async function POST(req: Request) {
