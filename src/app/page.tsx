@@ -1,4 +1,5 @@
 import ChatInput from '@/components/ChatInput';
+import Chats from '@/components/Chats';
 
 export default function Home() {
   return (
@@ -6,6 +7,7 @@ export default function Home() {
       <h1 className="text-4xl font-bold text-center">
         Welcome to your AI assistant
       </h1>
+      <Chats />
       <ChatInput />
     </main>
   )
