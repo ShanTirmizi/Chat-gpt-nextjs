@@ -1,10 +1,23 @@
 import { ChatGPTChats, OpenAiStream } from '../../../lib/openAiStream';
 import { chatListSchema } from '@/lib/validators/chat';
+import prisma from '@/lib/prisma';
 
 export async function POST(req: Request) {
-  const { chats } = await req.json();
+  const { chats, conversationId } = await req.json();
 
   const parseChats = chatListSchema.parse(chats);
+
+  // let conversation = await prisma.conversation.findUnique({
+  //   where: { id: conversationId },
+  // });
+
+  // if (!conversation) {
+  //   conversation = await prisma.conversation.create({
+  //     data: {
+  //       id: conversationId,
+  //     },
+  //   });
+  // }
 
   const outboundChats: ChatGPTChats[] = parseChats.map((chat) => ({
     role: chat.isUserInput ? 'user' : 'system',
@@ -15,6 +28,17 @@ export async function POST(req: Request) {
     role: 'system',
     content: 'Hello, I am a chatbot. How can I help you?',
   });
+
+  // // Create chat messages in the database
+  // for (const chat of outboundChats) {
+  //   await prisma.chatMessage.create({
+  //     data: {
+  //       conversationId: conversation.id,
+  //       role: chat.role,
+  //       content: chat.content,
+  //     },
+  //   });
+  // }
 
   const payload = {
     model: 'gpt-3.5-turbo',
