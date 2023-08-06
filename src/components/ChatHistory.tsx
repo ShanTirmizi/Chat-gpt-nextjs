@@ -42,8 +42,6 @@ const ChatHistory = () => {
             ))}
           </div>
         ))}
-
-      <div>asdf</div>
     </div>
   );
 };
