@@ -1,4 +1,5 @@
-import ChatInput from '@/components/ChatInput';
+import ChatHistory from '@/components/ChatHistory';
+import ChatComponent from '@/components/ChatComponent';
 import Chats from '@/components/Chats';
 
 export default function Home() {
@@ -7,8 +8,9 @@ export default function Home() {
       <h1 className='text-4xl font-bold text-center'>
         Welcome to your AI assistant
       </h1>
+      <ChatHistory />
       <Chats />
-      <ChatInput />
+      <ChatComponent />
     </main>
   );
 }

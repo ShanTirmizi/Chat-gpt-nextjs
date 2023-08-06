@@ -7,9 +7,11 @@ import { nanoid } from 'nanoid';
 import { FC, useContext, useRef, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 
-interface ChatInputProps {}
+interface ChatInputProps {
+  conversationId: string;
+}
 
-const ChatInput: FC<ChatInputProps> = () => {
+const ChatInput: FC<ChatInputProps> = ({ conversationId }) => {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { addChat, setIsChatUpdating, chats, updateChat, removeChat } =
@@ -22,7 +24,7 @@ const ChatInput: FC<ChatInputProps> = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ chats: [chat] }),
+        body: JSON.stringify({ chats: [chat], conversationId }),
       });
       if (!response.ok) throw new Error('Failed to send message');
       return response.body;
