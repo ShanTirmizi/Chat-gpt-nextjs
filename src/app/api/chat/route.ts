@@ -1,20 +1,44 @@
-import { ChatGPTChats, OpenAiStream } from "../../../lib/openAiStream"
-import { chatListSchema } from "@/lib/validators/chat"
+import { ChatGPTChats, OpenAiStream } from '../../../lib/openAiStream';
+import { chatListSchema } from '@/lib/validators/chat';
+import prisma from '@/lib/prisma';
 
 export async function POST(req: Request) {
-  const { chats } = await req.json()
+  const { chats, conversationId } = await req.json();
 
-  const parseChats = chatListSchema.parse(chats)
+  const parseChats = chatListSchema.parse(chats);
+
+  // let conversation = await prisma.conversation.findUnique({
+  //   where: { id: conversationId },
+  // });
+
+  // if (!conversation) {
+  //   conversation = await prisma.conversation.create({
+  //     data: {
+  //       id: conversationId,
+  //     },
+  //   });
+  // }
 
   const outboundChats: ChatGPTChats[] = parseChats.map((chat) => ({
     role: chat.isUserInput ? 'user' : 'system',
     content: chat.text,
-  }))
+  }));
 
   outboundChats.unshift({
     role: 'system',
     content: 'Hello, I am a chatbot. How can I help you?',
-  })
+  });
+
+  // // Create chat messages in the database
+  // for (const chat of outboundChats) {
+  //   await prisma.chatMessage.create({
+  //     data: {
+  //       conversationId: conversation.id,
+  //       role: chat.role,
+  //       content: chat.content,
+  //     },
+  //   });
+  // }
 
   const payload = {
     model: 'gpt-3.5-turbo',
@@ -26,9 +50,9 @@ export async function POST(req: Request) {
     max_tokens: 150,
     stream: true,
     n: 1,
-  }
+  };
 
-  const stream = await OpenAiStream(payload)
+  const stream = await OpenAiStream(payload);
 
-  return new Response(stream)
+  return new Response(stream);
 }
