@@ -18,19 +18,19 @@ const ChatInput: FC<ChatInputProps> = ({ conversationId }) => {
     useContext(ChatsContext);
 
   const { mutate: sendChat, isLoading } = useMutation({
-    mutationFn: async (chat: Chat) => {
+    mutationFn: async (allChats: Chat[]) => {
       const response = await fetch('api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ chats: [chat], conversationId }),
+        body: JSON.stringify({ chats: allChats, conversationId }),
       });
       if (!response.ok) throw new Error('Failed to send message');
       return response.body;
     },
-    onMutate: (chat: Chat) => {
-      addChat(chat);
+    onMutate: (allChats: Chat[]) => {
+      addChat(allChats[allChats.length - 1]);
     },
     onSuccess: async (stream) => {
       if (!stream) throw new Error('No stream');
@@ -60,9 +60,10 @@ const ChatInput: FC<ChatInputProps> = ({ conversationId }) => {
       }, 10);
       setIsChatUpdating(false);
     },
-    onError(_, chat) {
+    onError(_, allChats) {
       toast.error('Failed to send message');
-      removeChat(chat.id);
+      const newChat = allChats[allChats.length - 1];
+      removeChat(newChat.id);
     },
   });
   return (
@@ -78,12 +79,13 @@ const ChatInput: FC<ChatInputProps> = ({ conversationId }) => {
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
-            const chat = {
+            const newChat = {
               id: nanoid(),
               isUserInput: true,
               text: input,
             };
-            sendChat(chat);
+            const allChats = [...chats, newChat]; // concatenate the existing chats with the new message
+            sendChat(allChats);
             setInput('');
           }
         }}

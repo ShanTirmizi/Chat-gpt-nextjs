@@ -3,6 +3,7 @@ import {
   ParsedEvent,
   ReconnectInterval,
 } from 'eventsource-parser';
+import prisma from '@/lib/prisma';
 
 export type ChatGPTAgent = 'user' | 'system';
 
@@ -23,7 +24,10 @@ export interface OpenAiStreamPayload {
   n: number;
 }
 
-export async function OpenAiStream(payload: OpenAiStreamPayload) {
+export async function OpenAiStream(
+  payload: OpenAiStreamPayload,
+  conversationId: string
+) {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
 
@@ -40,7 +44,8 @@ export async function OpenAiStream(payload: OpenAiStreamPayload) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      function onParse(event: ParsedEvent | ReconnectInterval) {
+      let currentMessageContent = ''; // The current message content
+      async function onParse(event: ParsedEvent | ReconnectInterval) {
         if (event.type === 'event') {
           const data = event.data;
 
@@ -55,6 +60,25 @@ export async function OpenAiStream(payload: OpenAiStreamPayload) {
 
             if (counter < 2 && (text.match(/\n/) || []).length) {
               return;
+            }
+
+            currentMessageContent += text; // Append the text chunk to the current message
+
+            // Check the finish_reason
+            if (json.choices[0].finish_reason === 'stop') {
+              const role: ChatGPTAgent = 'system';
+
+              // Save the full message to the database
+              await prisma.chatMessage.create({
+                data: {
+                  conversationId: conversationId,
+                  role: role,
+                  content: currentMessageContent, // No trim() here since we aren't relying on newlines anymore
+                },
+              });
+
+              currentMessageContent = ''; // Reset for the next message
+              counter++;
             }
 
             const queue = encoder.encode(text);
@@ -73,5 +97,6 @@ export async function OpenAiStream(payload: OpenAiStreamPayload) {
       }
     },
   });
+
   return stream;
 }
