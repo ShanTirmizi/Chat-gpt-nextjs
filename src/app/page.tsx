@@ -8,9 +8,9 @@ export default function Home() {
       <h1 className='text-4xl font-bold text-center'>
         Welcome to your AI assistant
       </h1>
-      <ChatHistory />
       <Chats />
       <ChatComponent />
+      <ChatHistory />
     </main>
   );
 }

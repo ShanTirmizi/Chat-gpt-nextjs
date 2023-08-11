@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 interface ChatProps {
   id: string;
   content: string;
-  isUserInput: boolean;
+  role: string;
 }
 
 interface ConversationProps {
@@ -28,12 +28,14 @@ const ChatHistory = () => {
     <div className='flex flex-col-reverse'>
       {data &&
         data.map((conversation: ConversationProps) => (
-          <div key={conversation.id}>
+          <div key={conversation.id} className='border border-gray-300 p-2 m-2'>
             {conversation.messages.map((chat: ChatProps) => (
               <div key={chat.id} className='flex justify-end'>
                 <div
                   className={`rounded-lg p-4 m-2 ${
-                    chat.isUserInput ? 'bg-purple-400' : 'bg-white text-black'
+                    chat.role === 'user'
+                      ? 'bg-purple-400'
+                      : 'bg-white text-black'
                   }`}
                 >
                   {chat.content}
